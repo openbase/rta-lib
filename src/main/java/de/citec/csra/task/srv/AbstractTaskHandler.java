@@ -41,6 +41,6 @@ public abstract class AbstractTaskHandler implements TaskHandler, LocalTaskFacto
 	}
 	
 	@Override
-	public abstract LocalTask newTaskExecutor(Object description) throws IllegalArgumentException;
+	public abstract LocalTask newLocalTask(Object description) throws IllegalArgumentException;
 
 }

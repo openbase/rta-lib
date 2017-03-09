@@ -22,5 +22,5 @@ package de.citec.csra.task.srv;
  */
 public interface LocalTaskFactory {
 
-	public LocalTask newTaskExecutor(Object description) throws IllegalArgumentException;
+	public LocalTask newLocalTask(Object description) throws IllegalArgumentException;
 }

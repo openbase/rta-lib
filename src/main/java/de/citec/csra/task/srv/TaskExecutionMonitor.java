@@ -60,7 +60,7 @@ public class TaskExecutionMonitor implements Callable<Void>, TaskListener {
 		}
 
 		try {
-			this.executor = factory.newTaskExecutor(proxy.getPayload());
+			this.executor = factory.newLocalTask(proxy.getPayload());
 		} catch (IllegalArgumentException ex) {
 			LOG.log(Level.SEVERE, "Unable to generate task executor, rejecting task.", ex);
 			proxy.update(REJECTED, ex.getMessage());

@@ -29,7 +29,7 @@ public class ExecutorFactoryTaskHandler extends AbstractTaskHandler {
 	}
 
 	@Override
-	public LocalTask newTaskExecutor(Object description) throws IllegalArgumentException {
-		return this.builder.newTaskExecutor(description);
+	public LocalTask newLocalTask(Object description) throws IllegalArgumentException {
+		return this.builder.newLocalTask(description);
 	}
 }
