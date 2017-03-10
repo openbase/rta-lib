@@ -160,6 +160,10 @@ public class TaskProxy {
 	public void removeTaskListener(TaskListener l) {
 		this.listeners.remove(l);
 	}
+	
+	public void removeAllTaskListeners(){
+		this.listeners.clear();
+	}
 
 	private void checkState() {
 		switch (this.task.getState()) {
