@@ -68,7 +68,7 @@ public class TaskServer {
 							} catch (RSBException ex) {
 								LOG.log(Level.SEVERE, "Could not establish rsb communication, ignoring.", ex);
 							} catch (Exception ex) {
-								LOG.log(Level.WARNING, "Task at ''{0}'' failed during init: ''{1}'', ignoring.", new Object[]{e.getScope(), ex.getMessage()});
+								LOG.log(Level.WARNING, "Task at ''{0}'' failed during init ({1}: ''{2}''), ignoring.", new Object[]{e.getScope(), ex, ex.getMessage()});
 							}
 							break;
 						default:
