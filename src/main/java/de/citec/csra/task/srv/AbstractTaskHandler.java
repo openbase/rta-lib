@@ -32,14 +32,14 @@ import rst.communicationpatterns.TaskStateType.TaskState;
 public abstract class AbstractTaskHandler implements TaskHandler, LocalTaskFactory {
 
 	private final ExecutorService service = Executors.newCachedThreadPool();
-	
+
 	@Override
 	public void handle(TaskState t, Event e, Informer i) throws RSBException, InterruptedException {
 		TaskProxy proxy = new TaskProxy(t, e, i);
-		TaskExecutionMonitor monitor = new TaskExecutionMonitor(proxy, this);	
+		TaskExecutionMonitor monitor = new TaskExecutionMonitor(proxy, this);
 		service.submit(monitor);
 	}
-	
+
 	@Override
 	public abstract LocalTask newLocalTask(Object description) throws IllegalArgumentException;
 
