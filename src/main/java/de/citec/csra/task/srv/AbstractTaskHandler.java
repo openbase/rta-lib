@@ -31,13 +31,21 @@ import rst.communicationpatterns.TaskStateType.TaskState;
  */
 public abstract class AbstractTaskHandler implements TaskHandler, LocalTaskFactory {
 
-	private final ExecutorService service = Executors.newCachedThreadPool();
+	private final ExecutorService service;
+
+	public AbstractTaskHandler() {
+		this(Executors.newCachedThreadPool());
+	}
+
+	public AbstractTaskHandler(ExecutorService service) {
+		this.service = service;
+	}
 
 	@Override
 	public void handle(TaskState t, Event e, Informer i) throws RSBException, InterruptedException {
 		TaskProxy proxy = new TaskProxy(t, e, i);
 		TaskExecutionMonitor monitor = new TaskExecutionMonitor(proxy, this);
-		service.submit(monitor);
+		this.service.submit(monitor);
 	}
 
 	@Override
