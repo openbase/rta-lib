@@ -19,6 +19,8 @@ package de.citec.csra.task.cli;
 import de.citec.csra.task.TaskProxy;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rsb.InitializeException;
 import rsb.RSBException;
 import rst.communicationpatterns.TaskStateType.TaskState;
@@ -35,6 +37,8 @@ import static rst.communicationpatterns.TaskStateType.TaskState.State.INITIATED;
  */
 public class RemoteTask<T> implements Callable, TaskListener {
 
+	private final static Logger LOG = Logger.getLogger(RemoteTask.class.getName());
+	
 	private final long accept;
 	private final T payload;
 	private final TaskProxy proxy;
@@ -107,6 +111,9 @@ public class RemoteTask<T> implements Callable, TaskListener {
 							}
 						}
 					}
+				case COMPLETED:
+					LOG.log(Level.FINE, "Christmas came early: Task at ''{0}'' completed without accepting first.", scope);
+					return proxy.getPayload();
 				case REJECTED:
 					throw new RuntimeException("Task at '" + scope + "' could not be executed (" + state + "): " + proxy.getPayload());
 				case INITIATED:
