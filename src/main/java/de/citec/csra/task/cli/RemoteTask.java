@@ -39,28 +39,42 @@ public class RemoteTask<T> implements Callable, TaskListener {
 
 	private final static Logger LOG = Logger.getLogger(RemoteTask.class.getName());
 	
+	private final static long DEFAULT_TIMEOUT = 1000;
+	private final static boolean DEFAULT_COMPAT = false;
+	
+	
 	private final long accept;
 	private final T payload;
 	private final TaskProxy proxy;
 	private final String scope;
 	private final Object monitor = new Object();
 	private State state = INITIATED;
+	private final boolean compat;
 
 	public RemoteTask(String scope, T payload) throws InitializeException {
-		this(scope, payload, 1000);
+		this(scope, payload, DEFAULT_TIMEOUT, DEFAULT_COMPAT);
+	}
+	
+	public RemoteTask(String scope, T payload, boolean compat) throws InitializeException {
+		this(scope, payload, DEFAULT_TIMEOUT, compat);
 	}
 
 	public RemoteTask(String scope, T payload, long accept) throws InitializeException {
+		this(scope, payload, accept, DEFAULT_COMPAT);
+	}
+	
+	public RemoteTask(String scope, T payload, long accept, boolean compat) throws InitializeException {
 		this.scope = scope;
 		this.proxy = new TaskProxy(scope);
 		this.payload = payload;
 		this.accept = accept;
+		this.compat = compat;
 	}
 
 	private void activate() throws RSBException, InterruptedException {
 		synchronized (this.monitor) {
 			this.proxy.addTaskListener(this);
-			this.proxy.activate();
+			this.proxy.activate(compat);
 			this.proxy.update(state, payload);
 		}
 	}
