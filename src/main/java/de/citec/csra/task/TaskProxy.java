@@ -21,6 +21,7 @@ import de.citec.csra.task.cli.TaskListener;
 import de.citec.csra.rst.util.SerializationService;
 import static de.citec.csra.rst.util.SerializationService.EMPTY;
 import static de.citec.csra.rst.util.SerializationService.UTF8;
+import static de.citec.csra.rst.util.StringRepresentation.shortString;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -96,12 +97,25 @@ public class TaskProxy {
 	}
 
 	public void activate() throws RSBException, InterruptedException {
+		activate(false);
+	}
+
+	public void activate(boolean compat) throws RSBException, InterruptedException {
 		synchronized (this.listener) {
 			QueueAdapter<TaskState> qa = new QueueAdapter<>();
 			this.queue = qa.getQueue();
-			this.listener.addHandler(new FilteringHandler(qa, (e) -> {
-				return e.getCauses().contains(this.causeId);
-			}), true);
+			if (compat) {
+				this.listener.addHandler(qa, true);
+			} else {
+				this.listener.addHandler(new FilteringHandler(qa, (e) -> {
+					boolean related;
+					synchronized (this.listener) {
+						related = e.getCauses().contains(this.causeId);
+					}
+					LOG.log(Level.FINE, "SKIPPED task update at ''{0}'' with ''{1}'' (unrelated)", new String[]{this.scope.toString(), shortString(e.getData())});
+					return related;
+				}), true);
+			}
 			this.listener.addFilter(new OriginFilter(informer.getId(), true));
 			if (!this.informer.isActive()) {
 				this.informer.activate();
@@ -116,7 +130,7 @@ public class TaskProxy {
 					try {
 						TaskState update = this.queue.poll(2000, TimeUnit.MILLISECONDS);
 						if (update != null) {
-							LOG.log(Level.INFO, "RECEIVED task update at ''{0}'' with ''{1}''", new String[]{this.scope.toString(), update.toString().replaceAll("\n", " ")});
+							LOG.log(Level.INFO, "RECEIVED task update at ''{0}'' with ''{1}''", new String[]{this.scope.toString(), shortString(update)});
 							this.task.mergeFrom(update);
 							this.listeners.forEach((ts) -> {
 								ts.updated(update);
@@ -160,12 +174,12 @@ public class TaskProxy {
 	public void removeTaskListener(TaskListener l) {
 		this.listeners.remove(l);
 	}
-	
-	public void removeAllTaskListeners(){
+
+	public void removeAllTaskListeners() {
 		this.listeners.clear();
 	}
-	
-	public State getState(){
+
+	public State getState() {
 		return this.task.getState();
 	}
 
@@ -184,15 +198,16 @@ public class TaskProxy {
 	private synchronized void publish() {
 		try {
 			TaskState toSend = this.task.setSerial(this.task.getSerial() + 1).build();
-			LOG.log(Level.INFO, "SENDING task update to ''{0}'' with ''{1}''", new String[]{this.scope.toString(), toSend.toString().replaceAll("\n", " ")});
+			LOG.log(Level.INFO, "SENDING task update to ''{0}'' with ''{1}''", new String[]{this.scope.toString(), shortString(toSend)});
 			Event e = new Event(this.scope, TaskState.class, toSend);
 			if (this.causeId != null) {
 				e.addCause(this.causeId);
 			}
-			this.informer.publish(e);
-//			possible (highly unlikely) race condition if participant answers befor this variable is set?
-			if (this.causeId == null) {
-				this.causeId = e.getId();
+			synchronized (this.listener) {
+				this.informer.publish(e);
+				if (this.causeId == null) {
+					this.causeId = e.getId();
+				}
 			}
 		} catch (RSBException ex) {
 			Logger.getLogger(TaskProxy.class.getName()).log(Level.SEVERE, "Could not publish new task state", ex);
