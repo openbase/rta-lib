@@ -18,6 +18,8 @@ package de.citec.csra.allocation.cli;
 
 import de.citec.csra.rst.util.IntervalUtils;
 import static de.citec.csra.allocation.cli.RemoteAllocationService.TIMEOUT;
+import de.citec.csra.rst.util.StringRepresentation;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -67,6 +69,31 @@ public class RemoteAllocation implements Schedulable, Adjustable, SchedulerListe
 		this.queue = qa.getQueue();
 	}
 
+	public boolean hasToken() {
+		return allocation.getId().split("#").length == 2;
+	}
+
+	public void generateToken() {
+		setToken(UUID.randomUUID().toString().substring(0, 6));
+	}
+
+	public String getToken() {
+		if (!hasToken()) {
+			generateToken();
+		}
+		return allocation.getId().split("#")[1];
+	}
+
+	public void setToken(String token) {
+		String newId;
+		if (hasToken()) {
+			newId = allocation.getId().replaceAll(getToken(), token);
+		} else {
+			newId = allocation.getId() + "#" + token;
+		}
+		allocation = ResourceAllocation.newBuilder(allocation).setId(newId).build();
+	}
+	
 	public void addSchedulerListener(SchedulerListener l) {
 		synchronized (this.listeners) {
 			this.listeners.add(l);
