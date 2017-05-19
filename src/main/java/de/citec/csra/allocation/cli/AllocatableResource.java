@@ -100,6 +100,10 @@ public class AllocatableResource implements SchedulerListener, Executable {
 	public State getState() {
 		return this.queue.peekLast();
 	}
+	
+	public boolean hasState(State state) {
+		return this.queue.contains(state);
+	}
 
 	public void await(State state) throws InterruptedException {
 		synchronized (this.monitor) {
